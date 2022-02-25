@@ -1,0 +1,324 @@
+---
+title: "exploratory_"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Unhash the first line of code before running program for the first time
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+
+```
+
+```{r}
+rawdata <- read.csv('raw_data.csv')
+head(rawdata, 10)
+glimpse(rawdata)
+nrow(rawdata)
+ncol(rawdata)
+
+```
+### About the dataset
+
+The dataset comprises of Rows: 
+- 72,531, Columns: 147 
+- 16 dummy variables (flags) 
+- counts of total population, can be grouped by socioeconomic, demographic, car no car etc.
+
+Complete VARIABLE LIST IN NEXT CELL
+```{r}
+variables_list <- read.csv('variable_list.csv')
+variables_list
+```
+```{r}
+# creating first rendition of new dataset, attempting to remove null values
+data <- rawdata %>% na.omit %>% distinct()
+data <- complete(data)
+head(data,100)
+
+data[is.na(data)] <- NaN
+glimpse(data)
+
+
+#there are still null values but these are in demographic shares, will have to deal with them later
+```
+
+
+```{r}
+#Number of urban-tracts 
+
+#by state
+data %>% group_by(State) %>% summarize(sum(Urban)) 
+
+#by county
+data %>% group_by(County) %>% summarize(sum(Urban))
+
+data %>% select(starts_with("LATracts")) %>% select(c(-5)) %>% sum
+
+#looking at the sum of columns of this data we see the results to be
+#LATracts_half	LATracts1	LATracts10	LATracts20
+#46335	       24362	      3186	        347
+
+```
+
+## Pursuing investigation into LILAs    
+
+LILA = Low income, low access. 
+```{r}
+# isolating the columns that deal with shares/percentages
+
+
+datashare <- data %>% select(c("CensusTract", 
+                               "Urban", 
+                               "MedianFamilyIncome"
+"lapophalfshare", 
+      
+"lalowihalfshare",
+
+'lakidshalfshare',
+
+"laseniorshalfshare",
+
+"lawhitehalfshare",
+
+"lablackhalfshare",
+
+"laasianhalfshare",
+
+"lanhopihalfshare",
+
+"laaianhalfshare",
+
+"laomultirhalfshare",
+
+"lahisphalfshare",
+
+"lahunvhalfshare",
+
+"lasnaphalfshare",
+
+"lapop1share",
+
+"lalowi1share",
+
+"lakids1share",
+
+"laseniors1share",
+
+"lawhite1share",
+
+"lablack1share",
+
+"laasian1share",
+
+"lanhopi1share",
+
+"laaian1share",
+
+"laomultir1share",
+
+"lahisp1share",
+
+"lahunv1share",
+
+"lasnap1share",
+
+"lapop10share",
+
+"lalowi10share",
+
+"lakids10share",
+
+"laseniors10share",
+
+"lawhite10share",
+
+"lablack10share",
+
+"laasian10share",
+
+"lanhopi10share",
+
+"laaian10share",
+"laomultir10share",
+
+"lahisp10share",
+
+"lahunv10share",
+
+"lasnap10share",
+
+"lapop20share",
+
+"lalowi20share",
+
+"lakids20share",
+
+"laseniors20share",
+
+"lawhite20share",
+
+"lablack20share",
+
+"laasian20share",
+
+"lanhopi20share",
+
+"laaian20share",
+
+"laomultir20share",
+
+"lahisp20share",
+
+"lahunv20share",
+
+"lasnap20share"))
+
+datashare[ datashare == "NULL"] <- NA
+datashare[ complete.cases(datashare),]
+
+head(datashare, 10)
+
+glimpse(datashare)
+
+# This data has Census tract number as the primary identifier to be able to join back to any additional datasets. The share variables are 53 variables from the initial 147
+#Now to drop nulls
+
+library("Hmisc")
+```
+
+## Looking at some correlation matrices
+```{r}
+#importing data with no null values, brings the 
+corr_data = read.csv('Nonulldata.csv')
+
+
+glimpse(corr_data)
+corr_data[] <- lapply(corr_data, function(x) {
+    if(is.factor(x)) as.numeric(as.character(x)) else x
+})
+sapply(corr_data, class)
+
+corr_data <- corr_data %>% select(c("CensusTract", 
+                               
+                               "MedianFamilyIncome",
+"lapophalfshare", 
+      
+"lalowihalfshare",
+
+'lakidshalfshare',
+
+"laseniorshalfshare",
+
+"lawhitehalfshare",
+
+"lablackhalfshare",
+
+"laasianhalfshare",
+
+"lanhopihalfshare",
+
+"laaianhalfshare",
+
+"laomultirhalfshare",
+
+"lahisphalfshare",
+
+"lahunvhalfshare",
+
+"lasnaphalfshare",
+
+"lapop1share",
+
+"lalowi1share",
+
+"lakids1share",
+
+"laseniors1share",
+
+"lawhite1share",
+
+"lablack1share",
+
+"laasian1share",
+
+"lanhopi1share",
+
+"laaian1share",
+
+"laomultir1share",
+
+"lahisp1share",
+
+"lahunv1share",
+
+"lasnap1share",
+
+"lapop10share",
+
+"lalowi10share",
+
+"lakids10share",
+
+"laseniors10share",
+
+"lawhite10share",
+
+"lablack10share",
+
+"laasian10share",
+
+"lanhopi10share",
+
+"laaian10share",
+"laomultir10share",
+
+"lahisp10share",
+
+"lahunv10share",
+
+"lasnap10share",
+
+"lapop20share",
+
+"lalowi20share",
+
+"lakids20share",
+
+"laseniors20share",
+
+"lawhite20share",
+
+"lablack20share",
+
+"laasian20share",
+
+"lanhopi20share",
+
+"laaian20share",
+
+"laomultir20share",
+
+"lahisp20share",
+
+"lahunv20share",
+
+"lasnap20share"))
+
+M <- cor(corr_data, method = c("pearson"))
+glimpse(corr_data)
+```
+
+
+```{r}
+library(corrplot)
+cplt1 <- corrplot(M, method = 'color', type = 'upper', tl.cex = 0.5)
+
+c <- jpeg("cplt.jpg")
+```
+
